@@ -6,12 +6,16 @@ import (
 	"log"
 	"math"
 	"os"
+	"sort"
 	"strconv"
 )
 
 func main() {
 	// part 1
-	fmt.Printf("%d", maxCalories())
+	fmt.Println(maxCalories())
+
+	// part 2
+	fmt.Println(topCalories(3))
 }
 
 func maxCalories() int {
@@ -25,6 +29,20 @@ func maxCalories() int {
 	}
 
 	return max
+}
+
+func topCalories(limit int) int {
+	elfCalories := elfCalories()
+	sort.Slice(elfCalories, func(i, j int) bool {
+		return elfCalories[i] > elfCalories[j]
+	})
+
+	topSum := 0
+	for i := 0; i < limit; i++ {
+		topSum += elfCalories[i]
+	}
+
+	return topSum
 }
 
 func elfCalories() []int {
