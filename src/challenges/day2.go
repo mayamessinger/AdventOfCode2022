@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	// part 1
+	// part 2
 	fmt.Println(score())
 }
 
@@ -23,12 +23,11 @@ func score() int {
 
 func lineScore(line string) int {
 	letter, elfLetter := parseLine(line)
-	shape := shapeFromLetter(letter)
+	ending := endingFromLetter(letter)
 	elfShape := shapeFromLetter(elfLetter)
+	shape := shapeNeededForEnding(elfShape, ending)
 
-	points, _ := pointsForRound(shape, elfShape)
-
-	return points + pointsForShape(shape)
+	return pointsForEnding(ending) + pointsForShape(shape)
 }
 
 func parseLine(line string) (rune, rune) {
@@ -50,6 +49,20 @@ func shapeFromLetter(letter rune) string {
 		fallthrough
 	case rune('Z'):
 		return "scissors"
+	}
+
+	log.Fatal("Invalid letter")
+	return ""
+}
+
+func endingFromLetter(letter rune) string {
+	switch letter {
+	case rune('X'):
+		return "lose"
+	case rune('Y'):
+		return "draw"
+	case rune('Z'):
+		return "win"
 	}
 
 	log.Fatal("Invalid letter")
@@ -103,4 +116,53 @@ func pointsForRound(shape string, opponentShape string) (int, int) {
 
 	log.Fatal("Invalid shape combination")
 	return -1, -1
+}
+
+func shapeNeededForEnding(elfShape string, ending string) string {
+	switch elfShape {
+	case "rock":
+		switch ending {
+		case "win":
+			return "paper"
+		case "draw":
+			return "rock"
+		case "lose":
+			return "scissors"
+		}
+	case "paper":
+		switch ending {
+		case "win":
+			return "scissors"
+		case "draw":
+			return "paper"
+		case "lose":
+			return "rock"
+		}
+	case "scissors":
+		switch ending {
+		case "win":
+			return "rock"
+		case "draw":
+			return "scissors"
+		case "lose":
+			return "paper"
+		}
+	}
+
+	log.Fatal("Invalid shape combination")
+	return ""
+}
+
+func pointsForEnding(ending string) int {
+	switch ending {
+	case "win":
+		return 6
+	case "draw":
+		return 3
+	case "lose":
+		return 0
+	}
+
+	log.Fatal("Invalid ending")
+	return -1
 }
