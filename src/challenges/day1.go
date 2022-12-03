@@ -1,11 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"log"
 	"math"
-	"os"
 	"sort"
 	"strconv"
 )
@@ -48,7 +45,7 @@ func topCalories(limit int) int {
 func elfCalories() []int {
 	elfCalories := make([]int, 1)
 
-	for _, line := range readFile() {
+	for _, line := range ReadFile("./resources/day1.txt") {
 		if (line == "") {
 			elfCalories = append(elfCalories, 0)
 		} else {
@@ -58,25 +55,4 @@ func elfCalories() []int {
 	}
 
 	return elfCalories
-}
-
-func readFile() []string {
-	lines := make([]string, 0)
-
-	file, readErr := os.Open("./resources/day1.txt")
-	if readErr != nil {
-		log.Fatal(readErr)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	return lines
 }
