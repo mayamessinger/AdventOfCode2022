@@ -9,6 +9,9 @@ import (
 func main() {
 	// part 1
 	fmt.Println(duplicateItemPrioritySum())
+
+	// part 2
+	fmt.Println(badgeSum())
 }
 
 func duplicateItemPrioritySum() int {
@@ -37,6 +40,39 @@ func findDuplicateItem(compartment1 string, compartment2 string) rune {
 	}
 
 	log.Fatal("No duplicate item found")
+	return rune(0)
+}
+
+func badgeSum() int {
+	sum := 0
+
+	groupLines := []string{}
+	for index, line := range ReadFile("./resources/day3.txt") {
+		groupLines = append(groupLines, line)
+
+		if (index + 1) % 3 == 0 {
+			sum += badgeScore(groupLines)
+			groupLines = []string{}
+		}
+	}
+
+	return sum
+}
+
+func badgeScore(groupLines []string) int {
+	sharedItem := findSharedItem(groupLines)
+
+	return itemScore(sharedItem)
+}
+
+func findSharedItem(groupLines []string) rune {
+	for _, item := range groupLines[0] {
+		if strings.Contains(groupLines[1], string(item)) && strings.Contains(groupLines[2], string(item)) {
+			return rune(item)
+		}
+	}
+
+	log.Fatal("No shared item found")
 	return rune(0)
 }
 
