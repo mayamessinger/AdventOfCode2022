@@ -7,16 +7,16 @@ import (
 )
 
 func main() {
-	// part 1
-	fmt.Println(containedRangeSum())
+	// part 2
+	fmt.Println(overlappingRangeSum())
 }
 
-func containedRangeSum() int {
+func overlappingRangeSum() int {
 	sum := 0
 
 	for _, line := range ReadFile("./resources/day4.txt") {
 		range1, range2 := parseRanges(line)
-		if isFullyContainedRange(range1, range2) {
+		if rangesOverlap(range1, range2) {
 			sum += 1
 		}
 	}
@@ -39,6 +39,15 @@ func parseRanges(line string) ([]int, []int) {
 func isFullyContainedRange(range1 []int, range2 []int) bool {
 	if (range1[0] >= range2[0] && range1[1] <= range2[1]) ||
 		(range2[0] >= range1[0] && range2[1] <= range1[1]) {
+		return true
+	}
+
+	return false
+}
+
+func rangesOverlap(range1 []int, range2 []int) bool {
+	if (range1[0] <= range2[0] && range1[1] >= range2[0]) ||
+		(range2[0] <= range1[0] && range2[1] >= range1[0]) {
 		return true
 	}
 
