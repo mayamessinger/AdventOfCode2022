@@ -14,13 +14,16 @@ type Movement struct {
 
 func main() {
 	// part 1
-	fmt.Println(topCrates())
+	fmt.Println(topCrates(false))
+
+	// part 2
+	fmt.Println(topCrates(true))
 }
 
-func topCrates() string {
+func topCrates(keepMultipleOrder bool) string {
 	crateStacks, moves := parseLines()	
 	crateStacks = reverseCratesStackFromQueue(crateStacks) // input is in queue format, want stack format
-	crateStacks = processMoves(crateStacks, moves)
+	crateStacks = processMoves(crateStacks, moves, keepMultipleOrder)
 
 	return getTopCrates(crateStacks)
 }
@@ -75,12 +78,18 @@ func reverseCratesStackFromQueue(crateStacks [][]rune) [][]rune {
 	return crateStacks
 }
 
-func processMoves(crateStacks [][]rune, moves []Movement) [][]rune {
+func processMoves(crateStacks [][]rune, moves []Movement, keepMultipleOrder bool) [][]rune {
 	for _, move := range moves {
-		for i := 0; i < move.count; i++ {
-			item, fromStack := pop(crateStacks[move.from - 1])
+		if (keepMultipleOrder) {
+			items, fromStack := popMultiple(crateStacks[move.from - 1], move.count)
 			crateStacks[move.from - 1] = fromStack
-			crateStacks[move.to - 1] = push(crateStacks[move.to - 1], item)
+			crateStacks[move.to - 1] = pushMultiple(crateStacks[move.to - 1], items)
+		} else {
+			for i := 0; i < move.count; i++ {
+				item, fromStack := pop(crateStacks[move.from - 1])
+				crateStacks[move.from - 1] = fromStack
+				crateStacks[move.to - 1] = push(crateStacks[move.to - 1], item)
+			}
 		}
 	}
 
@@ -103,11 +112,26 @@ func push(stack []rune, item rune) []rune {
 	return stack
 }
 
+func pushMultiple(stack[] rune, items []rune) []rune {
+	for _, item := range items {
+		stack = push(stack, item)
+	}
+
+	return stack
+}
+
 func pop(stack []rune) (rune, []rune) {
 	item := peek(stack)
 	stack = (stack)[:len(stack) - 1]
 
 	return item, stack
+}
+
+func popMultiple(stack []rune, count int) ([]rune, []rune) {
+	items := stack[len(stack) - count:len(stack)]
+	stack = (stack)[:len(stack) - count]
+
+	return items, stack
 }
 
 func peek(stack []rune) rune {
