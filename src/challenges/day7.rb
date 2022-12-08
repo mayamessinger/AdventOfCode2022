@@ -6,10 +6,23 @@ module Challenges
     
         def main
             puts get_sum_of_folders_of_size(100000)
+
+            puts get_smallest_folder_to_delete
         end
 
         def get_sum_of_folders_of_size(size)
             get_folder_sizes.filter { |folder| folder[:size] <= size }.map { |folder| folder[:size] }.sum
+        end
+
+        def get_smallest_folder_to_delete
+            folder_sizes = get_folder_sizes
+            space_free = 70000000 - folder_sizes[folder_sizes.length - 1][:size]
+
+            get_smallest_folder_of_size(30000000 - space_free)
+        end
+
+        def get_smallest_folder_of_size(size)
+            get_folder_sizes.filter { |folder| folder[:size] >= size }.min_by { |folder| folder[:size] }[:size]
         end
 
         def get_folder_sizes
