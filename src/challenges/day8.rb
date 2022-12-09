@@ -6,64 +6,90 @@ module Challenges
     
         def main
             puts get_visible_trees
+
+            puts get_best_scenic_score
         end
 
         def get_visible_trees
-            trees = get_trees
+            trees = @trees || get_trees
             columns = trees.transpose
 
             visible_trees = 0
             for i in 0..trees.length - 1
                 for j in 0..trees[i].length - 1
-                    visible_trees += 1 if visible(trees, columns, i, j)
+                    visible_trees += 1 if at_edge(trees, i, j) || visible(trees[i], columns[j], i, j)
                 end
             end
 
             visible_trees
         end
 
-        def visible(trees, columns, i, j)
-            at_edge(trees, i, j) || visible_from_column(columns[j], i) || visible_from_side(trees[i], j)
+        def get_best_scenic_score
+            trees = @trees || get_trees
+            columns = trees.transpose
+
+            best_scenic_score = 0
+            for i in 0..trees.length - 1
+                for j in 0..trees[i].length - 1
+                    scenic_score = get_scenic_score(trees[i], columns[j], i, j)
+                    if scenic_score > best_scenic_score
+                        best_scenic_score = scenic_score
+                    end
+                end
+            end
+
+            best_scenic_score
+        end
+
+        def get_scenic_score(row, column, i, j)
+            left_score, _, right_score, _ = slice_score(row, j)
+            above_score, _, below_score, _ = slice_score(column, i)
+
+            return left_score * right_score * above_score * below_score
+        end
+
+        def slice_score(slice, index)
+            before_score = 0
+            before_reached_end = false
+            after_score = 0
+            after_reached_end = false
+
+            (index - 1).downto(0) do |k|
+                if slice[k] >= slice[index]
+                    before_score = index - k
+                    break
+                end
+            end
+            if before_score == 0
+                before_score = index
+                before_reached_end = true
+            end
+            for k in index + 1..slice.length - 1
+                if slice[k] >= slice[index]
+                    after_score = k - index
+                    break
+                end
+            end
+            if after_score == 0
+                after_score = slice.length - index - 1
+                after_reached_end = true
+            end
+
+            return before_score, before_reached_end, after_score, after_reached_end
         end
 
         def at_edge(trees, i, j)
             i == 0 || i == trees.length - 1 || j == 0 || j == trees[i].length - 1
         end
 
-        def visible_from_column(jthColumn, i)
-            hidden_from_above = false
-            hidden_from_below = false
-
-            for k in 0..i - 1
-                if jthColumn[k] >= jthColumn[i]
-                    hidden_from_above = true
-                end
-            end
-            for k in i + 1..jthColumn.length - 1
-                if jthColumn[k] >= jthColumn[i]
-                    hidden_from_below = true
-                end
-            end
-
-            !hidden_from_above || !hidden_from_below
+        def visible(row, column, i, j)
+            visible_from_slice(column, i) || visible_from_slice(row, j)
         end
 
-        def visible_from_side(ithRow, j)
-            hidden_from_left = false
-            hidden_from_right = false
+        def visible_from_slice(slice, index)
+            _, bre, _, are = slice_score(slice, index)
 
-            for k in 0..j - 1
-                if ithRow[k] >= ithRow[j]
-                    hidden_from_left = true
-                end
-            end
-            for k in j + 1..ithRow.length - 1
-                if ithRow[k] >= ithRow[j]
-                    hidden_from_right = true
-                end
-            end
-
-            !hidden_from_left || !hidden_from_right
+            bre || are
         end
 
         def get_trees
