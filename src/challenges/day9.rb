@@ -6,13 +6,15 @@ module Challenges
         include Helper
     
         def main
-            puts get_tail_visited_count
+            puts get_tail_visited_count 2
+
+            puts get_tail_visited_count 10
         end
 
-        def get_tail_visited_count
+        def get_tail_visited_count(knot_count)
             steps = get_steps
-            visited = get_visited(steps)
-            
+            visited = get_visited(steps, knot_count)
+
             visited.count
         end
 
@@ -28,23 +30,32 @@ module Challenges
             steps
         end
 
-        def get_visited(steps)
+        def get_visited(steps, knot_count)
             visited = Set.new
 
-            head_location = Point.new(0, 0)
-            tail_location = Point.new(0, 0)
-            visited.add("#{tail_location.x}.#{tail_location.y}")
+            knot_locations = Array.new(knot_count)
+            for i in 0..knot_count-1
+                knot_locations[i] = Point.new(0, 0)
+            end
+            visited.add("#{knot_locations[knot_locations.length - 1].x}.#{knot_locations[knot_locations.length - 1].y}")
             
             for step in steps
                 for i in 1..step[:distance]
-                    update_head_location(head_location, Step.new(step[:direction], 1))
-                    update_tail_location(head_location, tail_location)
+                    update_knot_locations(knot_locations, Step.new(step[:direction], 1))
 
-                    visited.add("#{tail_location.x}.#{tail_location.y}")
+                    visited.add("#{knot_locations[knot_locations.length - 1].x}.#{knot_locations[knot_locations.length - 1].y}")
                 end
             end
 
             visited
+        end
+
+        def update_knot_locations(knot_locations, step)
+            update_head_location(knot_locations[0], step)
+
+            for i in 1..knot_locations.length - 1
+                update_tail_location(knot_locations[i - 1], knot_locations[i])
+            end
         end
 
         def update_head_location(head_location, step)
@@ -64,21 +75,17 @@ module Challenges
             diff_x, diff_y = head_location.x - tail_location.x, head_location.y - tail_location.y
 
             move_x, move_y = 0, 0
-            if diff_x.abs > 1
-                difference = head_location.x - tail_location.x
-                move_x = difference.positive? ? difference - 1 : difference + 1
-
-                if diff_y.abs > 0
-                    move_y = head_location.y - tail_location.y
-                end
+            if diff_x.abs > 1 && diff_y.abs > 1
+                move_x = diff_x.positive? ? diff_x - 1 : diff_x + 1
+                move_y = diff_y.positive? ? diff_y - 1 : diff_y + 1
+            elsif diff_x.abs > 1
+                move_x = diff_x.positive? ? diff_x - 1 : diff_x + 1
+                move_y = diff_y
             elsif diff_y.abs > 1
-                difference = head_location.y - tail_location.y
-                move_y = difference.positive? ? difference - 1 : difference + 1
-
-                if diff_x.abs > 0
-                    move_x = head_location.x - tail_location.x
-                end
+                move_y = diff_y.positive? ? diff_y - 1 : diff_y + 1
+                move_x = diff_x
             end
+
             tail_location.x += move_x
             tail_location.y += move_y
         end
