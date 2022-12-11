@@ -42,6 +42,8 @@ module Challenges
                     flagged_cycle_values.push(x)
                 end
 
+                print_crt_for_instruction(current_cycle, duration, x)
+
                 # after cycle
 
                 x += current_instruction[:value]
@@ -52,6 +54,30 @@ module Challenges
             end
 
             flagged_cycle_values
+        end
+
+        def print_crt_for_instruction(current_cycle, duration, x)
+            crt = ""
+
+            for i in current_cycle..current_cycle + duration - 1
+                position_printing = i % 40
+
+                if x - 1 <= position_printing && position_printing <= x + 1
+                    crt += "#"
+                else
+                    crt += "."
+                end
+
+                if position_printing % 40 == 39
+                    print crt
+                    $stdout.flush
+                    crt = ""
+                    print "\n"
+                end
+            end
+
+            print crt
+            $stdout.flush
         end
 
         def get_duration(instruction)
