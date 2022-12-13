@@ -6,16 +6,17 @@ module Challenges
         include Helper
     
         def main
-            puts get_most_active_monkeys 20
+            puts get_most_active_monkeys 10000
         end
 
         def get_most_active_monkeys(rounds)
             monkeys = get_monkeys
+            monkey_multiple = get_monkey_multiple(monkeys)
 
             for i in 0..rounds - 1
                 monkeys.each do |monkey|
                     monkey.items.each do |item|
-                        new_worry, recipient = monkey.throw_item(item)
+                        new_worry, recipient = monkey.throw_item(item, monkey_multiple)
                         monkeys[recipient].items.push(new_worry)
                     end
                     monkey.items = []
@@ -47,6 +48,10 @@ module Challenges
             monkeys.push(monkey) # push final monkey to array after parsing
 
             monkeys
+        end
+
+        def get_monkey_multiple(monkeys)
+            monkeys.map(&:test_divisor).reduce(:*)
         end
 
         def update_monkey_info(line, monkey)
@@ -91,17 +96,18 @@ module Challenges
             if matches = test.match(regex)
                 divisor = matches[1].to_i
                 monkey.test = ->(num) { num % divisor == 0 }
+                monkey.test_divisor = divisor
             end
         end
     end
 
     class Monkey
-        attr_accessor :items, :operation, :test, :true_throw_to, :false_throw_to, :inspected_items
+        attr_accessor :items, :operation, :test, :test_divisor, :true_throw_to, :false_throw_to, :inspected_items
 
-        def throw_item(item_worry)
+        def throw_item(item_worry, modular_divisor)
             self.inspected_items += 1
             new_worry = self.operation.call(item_worry)
-            worry_at_toss = new_worry / 3
+            worry_at_toss = new_worry % modular_divisor
             return worry_at_toss, self.test.call(worry_at_toss) == true ?
                 true_throw_to :
                 false_throw_to
