@@ -7,12 +7,29 @@ module Challenges
     
         def main
             puts most_efficient_path_steps
+
+            puts most_efficient_path_steps_all_starts
         end
 
         def most_efficient_path_steps
             heightmap, my_location, goal_location = get_heightmap
             
             find_best_path(heightmap, my_location, goal_location).length - 1
+        end
+
+        def most_efficient_path_steps_all_starts
+            heightmap, _, goal_location = get_heightmap
+            starts = get_possible_starts(heightmap)
+
+            best_path_length = 2000000000
+            for start in starts
+                path = find_best_path(heightmap, start, goal_location)
+                if path
+                    best_path_length = path.length - 1 if path.length - 1 < best_path_length
+                end
+            end
+
+            best_path_length
         end
 
         def get_heightmap
@@ -30,6 +47,20 @@ module Challenges
             end
 
             return heightmap, my_location, goal_location
+        end
+
+        def get_possible_starts(heightmap)
+            starts = []
+
+            heightmap.each_with_index do |row, row_index|
+                row.each_with_index do |value, column_index|
+                    if value == "S" || value == "a"
+                        starts.push([row_index, column_index])
+                    end
+                end
+            end
+
+            starts
         end
 
         def find_best_path(heightmap, my_location, goal_location)
