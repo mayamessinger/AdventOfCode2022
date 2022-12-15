@@ -14,22 +14,18 @@ module Challenges
 
             units_dropped = 0
             while true
-                break if drop_sand(cave, 500 - x_min, max_y)
                 units_dropped += 1
+                break if drop_sand(cave, 500 - x_min)
             end
 
             units_dropped
         end
 
-        def drop_sand(cave, sand_x, max_y)
+        def drop_sand(cave, sand_x)
             x = sand_x
             y = 0
 
             while true
-                if y > max_y
-                    return true
-                end
-
                 if cave[x][y + 1] == nil
                     y += 1
                     next
@@ -41,6 +37,10 @@ module Challenges
                     x += 1
                     y += 1
                     next
+                end
+
+                if x == sand_x && y == 0
+                    return true
                 end
 
                 break
@@ -72,6 +72,7 @@ module Challenges
             min_x, max_x = find_x_extremes(rock_segments)
             for i in 0..max_x - min_x
                 cave[i] = Array.new() {"."}
+                cave[i][max_y + 2] = "#"
             end
 
             for segment in rock_segments
@@ -92,7 +93,7 @@ module Challenges
         def find_x_extremes(rock_segments)
             x_vals = rock_segments.map { |segment| segment[:start_x] }
             x_vals = x_vals.union(rock_segments.map { |segment| segment[:end_x] })
-            return x_vals.min, x_vals.max
+            return x_vals.min - 150, x_vals.max + 150 # offset that extends floor to handle spread of sand
         end
 
         def find_max_y(rock_segments)
