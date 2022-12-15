@@ -7,15 +7,17 @@ module Challenges
     
         def main
             puts sum_ordered_pairs
+
+            puts get_decoder_key
         end
 
         def sum_ordered_pairs
             sum_ordered_pairs = 0
 
-            lines = read_file("./resources/day13.txt")
-            0.step(lines.length, 3) do |i|
-                packet1 = get_structure(lines[i])
-                packet2 = get_structure(lines[i + 1])
+            @lines ||= read_file("./resources/day13.txt")
+            0.step(@lines.length, 3) do |i|
+                packet1 = get_structure(@lines[i])
+                packet2 = get_structure(@lines[i + 1])
 
                 if ordered(packet1, packet2)
                     sum_ordered_pairs += (i / 3 + 1)
@@ -23,6 +25,42 @@ module Challenges
             end
 
             sum_ordered_pairs
+        end
+
+        def get_decoder_key
+            sorted = quick_sort(get_packets)
+            (sorted.find_index(get_structure("[[2]]")) + 1) * (sorted.find_index(get_structure("[[6]]")) + 1)
+        end
+
+        def get_packets
+            packets = []
+
+            @lines ||= read_file("./resources/day13.txt")
+            for line in @lines
+                packets << get_structure(line) unless line == ""
+            end
+            packets << get_structure("[[2]]")
+            packets << get_structure("[[6]]")
+
+            packets
+        end
+
+        def quick_sort(packets)
+            return packets if packets.length <= 1
+
+            pivot = packets[0]
+            left = []
+            right = []
+
+            for i in 1..packets.length - 1
+                if ordered(packets[i], pivot)
+                    left << packets[i]
+                else
+                    right << packets[i]
+                end
+            end
+
+            quick_sort(left) + [pivot] + quick_sort(right)
         end
 
         def ordered(packet1, packet2)
