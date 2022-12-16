@@ -7,24 +7,105 @@ module Challenges
     
         def main
             puts count_impossible_beacon_spaces 2000000
+
+            puts get_distress_tuning_frequency 0, 4000000
         end
 
         def count_impossible_beacon_spaces(row)
             sensors, beacons = parse_sensors_and_beacons
+            impossible_beacon_ranges(row, sensors, beacons).map { |range| range[1] - range[0] + 1 }.sum
+        end
 
-            sensor_coverage_cols = Set.new
-            for sensor in sensors
-                sensor_leeway = sensor.beacon_distance - (sensor.y - row).abs
-                sensor_coverage_cols.merge(sensor.x - sensor_leeway..sensor.x + sensor_leeway)
-            end
-
+        def impossible_beacon_ranges(row, sensors, beacons, low_limit = nil, high_limit = nil)
+            coverages = get_coverage(row, sensors, beacons, low_limit, high_limit)
+            
             for beacon in beacons
                 if beacon.y == row
-                    sensor_coverage_cols.delete(beacon.x)
+                    containing_coverage = coverages.find { |coverage| coverage[0] <= beacon.x && coverage[1] >= beacon.x }
+                    if !containing_coverage.nil?
+                        coverages.delete(containing_coverage)
+                        coverages.push([containing_coverage[0], beacon.x - 1]) unless containing_coverage[0] == beacon.x
+                        coverages.push([beacon.x + 1, containing_coverage[1]]) unless containing_coverage[1] == beacon.x
+                    end
                 end
             end
 
-            return sensor_coverage_cols.size
+            coverages
+        end
+
+        def get_distress_tuning_frequency(low_limit, high_limit)
+            sensors, beacons = parse_sensors_and_beacons
+
+            for row in low_limit..high_limit
+                sensor_coverage_ranges = get_coverage(row, sensors, beacons, low_limit, high_limit)
+                if sensor_coverage_ranges.length != 1 # if there is only one range, it is the whole row. else there are 2 ranges with a gap of a single space between
+                    sorted_ranges = sensor_coverage_ranges.sort_by! { |range| range[0] }
+                    y = sorted_ranges[0][1] + 1 # the beacon must be in the gap between the two ranges
+                    return y * 4000000 + row
+                end
+            end
+        end
+
+        def get_coverage(row, sensors, beacons, low_limit, high_limit)
+            sensor_coverage_ranges = sensor_covered_ranges(row, sensors, beacons, low_limit, high_limit)
+             
+            combine_ranges(sensor_coverage_ranges)
+        end
+
+        def combine_ranges(ranges)
+            coverages = []
+            
+            for range in ranges
+                if coverages.empty?
+                    coverages.push(range)
+                    next
+                end
+
+                overlap = false
+                for coverage in coverages
+                    # start before and end in or after, extend coverage before
+                    if range[0] <= coverage[0]
+                        if range[1] >= coverage[0]
+                            coverage[0] = range[0]
+                            overlap = true
+                        end
+                    end
+                    # if start before or at and end after, extend coverage after
+                    if range[0] <= coverage[1]
+                        if range[1] > coverage[1]
+                            coverage[1] = range[1]
+                            overlap = true
+                        end
+                    end
+                    # if fully contained, ignore
+                    if range[0] >= coverage[0] && range[1] <= coverage[1]
+                        overlap = true
+                    end
+                end
+
+                coverages.push(range) unless overlap
+            end
+
+            # keep combining until no more overlaps
+            coverages = combine_ranges(coverages) if coverages.length != ranges.length
+
+            coverages
+        end
+
+        def sensor_covered_ranges(row, sensors, beacons, low_limit = nil, high_limit = nil)
+            sensor_coverage_ranges = []
+            for sensor in sensors
+                sensor_leeway = sensor.beacon_distance - (sensor.y - row).abs
+                next if sensor_leeway < 0
+                range_low, range_high = exclude_outside_frame(sensor.x - sensor_leeway, sensor.x + sensor_leeway, low_limit, high_limit)
+                sensor_coverage_ranges.push([range_low, range_high])
+            end
+
+            sensor_coverage_ranges
+        end
+
+        def exclude_outside_frame(set_low, set_high, low_limit, high_limit)
+            return [low_limit ||= set_low, set_low].max, [high_limit ||= set_high, set_high].min
         end
 
         def parse_sensors_and_beacons
